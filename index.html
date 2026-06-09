@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e27">
+  <meta name="description" content="国内外算力平台 & 大模型平台优惠聚合">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>算力优惠聚合</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark">
+
+<div id="app">
+
+  <!-- ==================== 首页（DeepSeek 风格） ==================== -->
+  <div id="page-home" class="page active">
+    <div class="home-gradient"></div>
+    <div class="home-inner">
+      <!-- Logo & Title -->
+      <div class="ds-header">
+        <div class="ds-logo">⚡</div>
+        <h1 class="ds-title">算力优惠</h1>
+        <p class="ds-desc">聚合国内外算力平台与大模型平台，最全优惠一站掌握</p>
+      </div>
+
+      <!-- 主要入口（类似 DeepSeek 的输入框区域） -->
+      <div class="ds-actions">
+        <button class="ds-btn ds-btn-primary" onclick="navigateTo('list','compute')">
+          <span class="ds-btn-bg"></span>
+          <span class="ds-btn-content">
+            <span class="ds-btn-icon">🖥️</span>
+            <span class="ds-btn-text">
+              <span class="ds-btn-label">算力平台</span>
+              <span class="ds-btn-sub">国内外 22 个 GPU 云平台</span>
+            </span>
+          </span>
+        </button>
+        <button class="ds-btn ds-btn-secondary" onclick="navigateTo('list','llm')">
+          <span class="ds-btn-bg"></span>
+          <span class="ds-btn-content">
+            <span class="ds-btn-icon">🧠</span>
+            <span class="ds-btn-text">
+              <span class="ds-btn-label">AI 大模型</span>
+              <span class="ds-btn-sub">国内外 21 个大模型 API 平台</span>
+            </span>
+          </span>
+        </button>
+      </div>
+
+      <!-- 平台快捷入口（Logo 网格） -->
+      <div class="ds-quick" id="quickPlatforms">
+        <div class="ds-quick-title">热门平台</div>
+        <div class="ds-quick-grid" id="quickGrid"></div>
+      </div>
+
+      <!-- 热门优惠 -->
+      <div class="ds-hot" id="homeHot">
+        <div class="ds-hot-title">🔥 热门优惠</div>
+        <div class="ds-hot-list" id="homeHotList"></div>
+      </div>
+
+      <!-- Footer -->
+      <div class="ds-footer">
+        <span>已收录 <strong id="homePlatformCount">0</strong> 个平台 · <strong id="homeDealCount">0</strong> 个优惠</span>
+        <span class="ds-footer-link" onclick="showAboutModal()">ℹ️ 关于</span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- ==================== 分类列表页 ==================== -->
+  <div id="page-list" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="goHome()">← 返回</button>
+      <h2 class="page-title" id="listTitle">算力平台</h2>
+      <div style="width:44px"></div>
+    </div>
+    <div class="list-filter" id="listFilter">
+      <button class="list-filter-btn active" data-filter="all">全部</button>
+      <button class="list-filter-btn" data-filter="domestic">🇨🇳 国内</button>
+      <button class="list-filter-btn" data-filter="international">🌍 国际</button>
+      <button class="list-filter-btn" data-filter="free">🎁 免费试用</button>
+    </div>
+    <div class="list-search">
+      <span class="list-search-icon">🔍</span>
+      <input type="text" id="listSearch" placeholder="搜索平台名称..." autocomplete="off">
+    </div>
+    <div class="list-scroll" id="listScroll">
+      <div id="listContainer" class="list-container"></div>
+      <div id="listEmpty" class="list-empty" style="display:none">
+        <div class="list-empty-icon">📭</div>
+        <p>没有匹配的平台</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 平台明细页 ==================== -->
+  <div id="page-detail" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="goToList()">← 返回</button>
+      <h2 class="page-title" id="detailTitle">平台详情</h2>
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    </div>
+    <div class="detail-scroll" id="detailScroll">
+      <div class="detail-header" id="detailHeader"></div>
+      <div class="detail-section">
+        <h3 class="detail-section-title">🎯 优惠活动</h3>
+        <div id="detailDeals" class="detail-deals"></div>
+      </div>
+      <div class="detail-section">
+        <h3 class="detail-section-title">ℹ️ 关于该平台</h3>
+        <p class="detail-about" id="detailAbout"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 收藏页 ==================== -->
+  <div id="page-fav" class="page">
+    <div class="page-header">
+      <div style="width:44px"></div>
+      <h2 class="page-title">⭐ 我的收藏</h2>
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtnFav">🌙</button>
+    </div>
+    <div class="list-scroll" id="favScroll">
+      <div id="favContainer" class="list-container"></div>
+      <div id="favEmpty" class="list-empty" style="display:block">
+        <div class="list-empty-icon">📭</div>
+        <p>还没有收藏任何平台</p>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px">浏览平台列表时点击 ☆ 即可收藏</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 底部导航 ==================== -->
+  <nav id="bottomNav">
+    <button class="nav-item active" onclick="goHome()">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">首页</span>
+    </button>
+    <button class="nav-item" onclick="navigateTo('list','compute')">
+      <span class="nav-icon">🖥️</span>
+      <span class="nav-label">算力</span>
+    </button>
+    <button class="nav-item" onclick="navigateTo('list','llm')">
+      <span class="nav-icon">🧠</span>
+      <span class="nav-label">大模型</span>
+    </button>
+    <button class="nav-item" id="favNavBtn" onclick="showFavPage()">
+      <span class="nav-icon">⭐</span>
+      <span class="nav-label">收藏</span>
+      <span class="nav-badge" id="favBadge" style="display:none">0</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ===== 关于弹窗 ===== -->
+<div id="aboutModal" class="modal" style="display:none">
+  <div class="modal-overlay"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>关于算力优惠聚合</h3>
+      <button class="modal-close">✕</button>
+    </div>
+    <div class="modal-body about-body">
+      <div class="about-logo">⚡</div>
+      <p class="about-desc">聚合国内外算力平台和大模型平台的最新优惠活动，帮助开发者以最低成本获取算力和AI服务。</p>
+      <div class="about-stats">
+        <div class="stat-item">
+          <span class="stat-num" id="aboutPlatformCount">0</span>
+          <span class="stat-label">收录平台</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="aboutDealCount">0</span>
+          <span class="stat-label">优惠活动</span>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text3);margin-top:16px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+        ⚙️ 数据仅供参考 · 请以各平台官网为准<br>
+        <button onclick="closeModals()" style="margin-top:8px;padding:6px 20px;border-radius:16px;background:var(--accent);color:white;font-size:13px">关闭</button>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
