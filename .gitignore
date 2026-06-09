@@ -1,0 +1,6 @@
+node_modules/
+auto-update/node_modules/
+auto-update/function.zip
+.DS_Store
+*.bak
+scraped-deals.json
