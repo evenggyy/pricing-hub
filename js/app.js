@@ -91,6 +91,11 @@ function showFavPage() {
   navActive(3);
 }
 
+function showForum() {
+  switchPage('page-forum');
+  navActive(4);
+}
+
 function navActive(idx) {
   document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === idx));
 }
