@@ -6,7 +6,11 @@
   <meta name="theme-color" content="#0a0e27">
   <meta name="description" content="国内外算力平台 & 大模型平台优惠聚合">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>算力优惠聚合</title>
+  <title>算力优惠聚合 - 国内外算力平台与AI大模型优惠</title>
+  <meta name="keywords" content="GPU云服务器,算力平台,大模型API,AI优惠,GPU优惠,云计算比价">
+  <meta name="description" content="聚合国内外43个算力平台和大模型平台的最新优惠活动，包括阿里云、腾讯云、AWS、OpenAI、DeepSeek等，一站式对比GPU价格和免费额度。">
+  <!-- 不蒜子统计 -->
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -64,9 +68,33 @@
       <!-- Footer -->
       <div class="ds-footer">
         <span>已收录 <strong id="homePlatformCount">0</strong> 个平台 · <strong id="homeDealCount">0</strong> 个优惠</span>
-        <span class="ds-footer-link" onclick="showAboutModal()">ℹ️ 关于</span>
+        <span style="font-size:11px;color:var(--text3);margin-top:4px">
+          👁️ <span id="busuanzi_value_site_pv">-</span> 次访问
+        </span>
+        <span style="margin-top:6px">
+          <span class="ds-footer-link" onclick="showCompare()">📊 比价</span>
+          <span class="ds-footer-link" onclick="showAboutModal()" style="margin-left:12px">ℹ️ 关于</span>
+        </span>
       </div>
     </div>
+    <!-- 浮动提交按钮 -->
+    <button class="fab-btn" onclick="showSubmitDeal()" title="提交优惠">＋</button>
+    </div>
+  </div>
+
+  <!-- ==================== 比价页 ==================== -->
+  <div id="page-compare" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="goHome()">← 返回</button>
+      <h2 class="page-title">📊 GPU 比价</h2>
+      <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+    </div>
+    <div class="detail-scroll" id="compareScroll">
+      <div class="detail-section">
+        <h3 class="detail-section-title">主流 GPU 云实例价格对比</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">按小时计费，单位：美元/小时（国际平台）或元/小时（国内平台）。价格可能变化，仅供参考。</p>
+        <div id="compareTable"></div>
+      </div>
     </div>
   </div>
 
@@ -180,6 +208,34 @@
       <span class="nav-label">论坛</span>
     </button>
   </nav>
+</div>
+
+<!-- ===== 提交优惠弹窗 ===== -->
+<div id="submitModal" class="modal" style="display:none">
+  <div class="modal-overlay" onclick="closeSubmitDeal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📝 提交优惠信息</h3>
+      <button class="modal-close" onclick="closeSubmitDeal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">发现新优惠？填表提交，审核后上线。</p>
+      <div class="submit-form">
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;margin-top:12px">平台</label>
+        <select id="submitPlatform" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px"><option value="">选择平台...</option></select>
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;margin-top:12px">优惠标题</label>
+        <input id="submitTitle" placeholder="新用户免费试用3个月" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;box-sizing:border-box">
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;margin-top:12px">描述</label>
+        <textarea id="submitDesc" placeholder="详细说明优惠内容..." style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;min-height:60px;box-sizing:border-box;resize:vertical;font-family:inherit"></textarea>
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;margin-top:12px">链接</label>
+        <input id="submitUrl" placeholder="https://..." style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;box-sizing:border-box">
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button onclick="saveSubmitDeal()" style="flex:1;padding:10px;border-radius:8px;background:var(--accent);color:#fff;border:none;font-size:14px;cursor:pointer">✅ 提交</button>
+          <button onclick="closeSubmitDeal()" style="flex:1;padding:10px;border-radius:8px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);font-size:14px;cursor:pointer">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ===== 关于弹窗 ===== -->
