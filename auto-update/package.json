@@ -1,0 +1,9 @@
+{
+  "name": "pricing-hub-auto-update",
+  "version": "1.0.0",
+  "description": "每日自动抓取算力优惠",
+  "main": "index.js",
+  "dependencies": {
+    "ali-oss": "^6.20.0"
+  }
+}
