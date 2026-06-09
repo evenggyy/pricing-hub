@@ -1,0 +1,29 @@
+name: Daily Update
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # UTC 22:00 = 北京时间 06:00
+  workflow_dispatch:       # 可手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install cheerio
+
+      - name: Scrape deals
+        run: node scraper.js
+
+      - name: Merge & upload
+        env:
+          ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: |
+          node daily-update.js
