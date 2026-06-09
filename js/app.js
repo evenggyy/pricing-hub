@@ -330,6 +330,15 @@ function renderList() {
 }
 
 // ===== 明细渲染 =====
+// 检查优惠是否过期
+function isDealExpired(validUntil) {
+  if (!validUntil || validUntil === '长期有效') return false;
+  const match = validUntil.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return false;
+  const expiry = new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+  return expiry < new Date();
+}
+
 function renderDetail(platformId) {
   const p = platforms.find(x => x.id === platformId);
   if (!p) return;
@@ -367,17 +376,19 @@ function renderDetail(platformId) {
       <div style="text-align:center;padding:32px 0;color:var(--text3);font-size:14px">暂无收录优惠活动</div>`;
   } else {
     const tagMap = { free: '免费', time: '限时', new: '最新', hot: '热门' };
-    document.getElementById('detailDeals').innerHTML = platformDeals.map(d => `
-      <div class="detail-deal">
-        <div class="deal-title">${d.title}</div>
+    document.getElementById('detailDeals').innerHTML = platformDeals.map(d => {
+      const expired = isDealExpired(d.validUntil);
+      return `
+      <div class="detail-deal" style="${expired ? 'opacity:0.5;border-color:var(--red)' : ''}">
+        <div class="deal-title">${d.title}${expired ? '<span style="font-size:11px;color:var(--red);margin-left:6px;font-weight:400">⏰ 已过期</span>' : ''}</div>
         <div class="deal-desc">${d.desc}</div>
         <div class="deal-tags">${d.tags.map(t => `<span class="deal-tag ${t}">${tagMap[t] || t}</span>`).join('')}</div>
         <div class="deal-footer">
           <span class="deal-valid">📅 ${d.validUntil}</span>
-          <a href="${d.url}" target="_blank" rel="noopener noreferrer" class="deal-link">立即查看 →</a>
+          ${expired ? '' : `<a href="${d.url}" target="_blank" rel="noopener noreferrer" class="deal-link">立即查看 →</a>`}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
   const aboutText = p.detailDesc || p.desc;
@@ -405,4 +416,63 @@ function showAboutModal() {
 }
 function closeModals() {
   document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+}
+
+// ===== 提交优惠 =====
+function showSubmitDeal() {
+  const sel = document.getElementById('submitPlatform');
+  if (sel) {
+    sel.innerHTML = '<option value="">选择平台...</option>' +
+      platforms.map(p => `<option value="${p.id}">${p.icon} ${p.name}</option>`).join('');
+  }
+  document.getElementById('submitModal').style.display = 'flex';
+}
+function closeSubmitDeal() {
+  document.getElementById('submitModal').style.display = 'none';
+}
+function saveSubmitDeal() {
+  const pid = document.getElementById('submitPlatform').value;
+  const title = document.getElementById('submitTitle').value.trim();
+  const desc = document.getElementById('submitDesc').value.trim();
+  const url = document.getElementById('submitUrl').value.trim();
+  if (!pid || !title) { showToast('请填写平台和标题'); return; }
+  // 存到 localStorage
+  const pending = JSON.parse(localStorage.getItem('pending-deals') || '[]');
+  pending.push({ platformId: pid, title, desc, url, time: new Date().toISOString() });
+  localStorage.setItem('pending-deals', JSON.stringify(pending));
+  closeSubmitDeal();
+  document.getElementById('submitTitle').value = '';
+  document.getElementById('submitDesc').value = '';
+  document.getElementById('submitUrl').value = '';
+  showToast('✅ 已收到！管理员审核后上线');
+}
+
+// ===== 比价页 =====
+const priceData = [
+  { gpu: 'H100', aliyun: '¥42/时', tencent: '¥38/时', huawei: '¥45/时', aws: '$4.2/时', gcp: '$3.8/时', azure: '$4.0/时', lambdalabs: '$2.5/时', vastai: '$1.8/时' },
+  { gpu: 'A100 80G', aliyun: '¥28/时', tencent: '¥26/时', huawei: '¥30/时', aws: '$3.2/时', gcp: '$2.9/时', azure: '$3.0/时', lambdalabs: '$1.8/时', vastai: '$1.2/时' },
+  { gpu: 'A100 40G', aliyun: '¥18/时', tencent: '¥16/时', huawei: '¥20/时', aws: '$2.5/时', gcp: '$2.2/时', azure: '$2.3/时', lambdalabs: '$1.3/时', vastai: '$0.9/时' },
+  { gpu: 'V100', aliyun: '¥10/时', tencent: '¥9/时', huawei: '¥11/时', aws: '$1.4/时', gcp: '$1.2/时', azure: '$1.3/时', lambdalabs: '-', vastai: '$0.5/时' },
+  { gpu: 'T4', aliyun: '¥5/时', tencent: '¥4.5/时', huawei: '¥5.5/时', aws: '$0.7/时', gcp: '$0.6/时', azure: '$0.65/时', lambdalabs: '-', vastai: '$0.3/时' },
+  { gpu: 'L4', aliyun: '¥6/时', tencent: '¥5.5/时', huawei: '¥6.5/时', aws: '$0.8/时', gcp: '$0.7/时', azure: '$0.75/时', lambdalabs: '$0.5/时', vastai: '$0.35/时' },
+  { gpu: 'RTX4090', aliyun: '-', tencent: '-', huawei: '-', aws: '-', gcp: '-', azure: '-', lambdalabs: '$0.7/时', vastai: '$0.35/时' },
+];
+
+function showCompare() {
+  const table = document.getElementById('compareTable');
+  if (!table) return;
+  let html = '<table class="compare-table"><thead><tr><th>GPU</th><th>阿里云</th><th>腾讯云</th><th>华为云</th><th>AWS</th><th>GCP</th><th>Azure</th><th>Lambda</th><th>Vast</th></tr></thead><tbody>';
+  priceData.forEach(r => {
+    html += `<tr><td class="gpu-name">${r.gpu}</td>`;
+    [r.aliyun, r.tencent, r.huawei, r.aws, r.gcp, r.azure, r.lambdalabs, r.vastai].forEach(p => {
+      const cls = p === '-' ? 'price-na' : (p.includes('$') && parseFloat(p) < 1) || (p.includes('¥') && parseFloat(p) < 10) ? 'price-best' : '';
+      html += `<td class="${cls}">${p}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<p style="font-size:11px;color:var(--text3);margin-top:8px">💡 绿色=较优价格 · 价格仅供参考，以各平台官网为准</p>';
+  table.innerHTML = html;
+  switchPage('page-compare');
+  navActive(-1);
 }
