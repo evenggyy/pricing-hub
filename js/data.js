@@ -36,6 +36,9 @@ const platforms = [
   { id: 'sensecraft', name: '商汤大装置', icon: '🧠', region: 'domestic', url: 'https://www.sensetime.com', category: 'compute', brand: ['#1E3A5F','#2D5A8E'],
     desc: '商汤AI大模型训练平台，SenseCore训练与推理服务',
     detailDesc: '商汤大装置（SenseCore）是商汤科技打造的AI基础设施平台，提供大规模AI训练和推理算力服务。支持万卡级分布式训练，覆盖大语言模型、多模态模型、视觉模型等。适合企业级和科研级的大规模AI训练需求，是国产AI基础设施的重要力量。' },
+  { id: 'siliconflow', name: '硅基流动', icon: '🔌', region: 'domestic', url: 'https://siliconflow.cn', category: 'compute', brand: ['#2563EB','#3B82F6'],
+    desc: '国产AI推理加速平台，提供高速大模型API与GPU算力服务',
+    detailDesc: '硅基流动（SiliconFlow）是国内领先的AI推理加速平台，提供高速大模型API服务和GPU算力服务。覆盖语言、语音、图片、视频等多模态模型，推理速度领先行业10倍以上。提供开箱即用的大模型API、预留实例、私有化部署等全场景产品矩阵。新用户可领取免费体验额度。' },
 
   // ====== 国际算力平台 ======
   { id: 'aws', name: 'AWS', icon: '🟠', region: 'international', url: 'https://aws.amazon.com', category: 'compute', brand: ['#FF9900','#FFB344'],
@@ -152,6 +155,8 @@ const deals = [
   { platformId: 'ucloud', title: 'GPU云主机新客专享', desc: '新用户首次购买GPU云主机，享受2折优惠，支持V100/T4实例', tags: ['time'], validUntil: '2025-12-31', url: 'https://www.ucloud.cn/site/product/ugpu.html', promoType: 'discount' },
   { platformId: 'qingcloud', title: '青云GPU免费试用7天', desc: '新用户可免费试用GPU云服务器7天，支持NVIDIA A100/V100实例', tags: ['free', 'time'], validUntil: '2025-12-31', url: 'https://www.qingcloud.com/products/gpu/', promoType: 'free' },
   { platformId: 'sensecraft', title: '商汤大装置训练资源试用', desc: '新用户可申请SenseCore训练平台免费试用额度，支持大规模分布式训练', tags: ['free'], validUntil: '2025-12-31', url: 'https://www.sensetime.com/cn/cloud-platform', promoType: 'free' },
+  { platformId: 'siliconflow', title: '高速版DeepSeek-V4-Pro体验', desc: '硅基流动上线高速版DeepSeek-V4-Pro，百万字级别超长上下文处理能力', tags: ['new', 'hot'], validUntil: '长期有效', url: 'https://siliconflow.cn', promoType: 'free' },
+  { platformId: 'siliconflow', title: '推荐官计划·送代金券', desc: '硅基流动推荐好友赢全平台通用代金券，奖励无限叠加', tags: ['free', 'new'], validUntil: '长期有效', url: 'https://siliconflow.cn', promoType: 'free' },
 
   // ====== 国际算力优惠 ======
   { platformId: 'aws', title: 'AWS Free Tier GPU额度', desc: 'AWS免费套餐包含EC2 GPU实例每月750小时（t2.micro等效），新账号12个月有效', tags: ['free'], validUntil: '长期有效', url: 'https://aws.amazon.com/free', promoType: 'free' },
@@ -206,3 +211,30 @@ const deals = [
   { platformId: 'deepseek', title: 'DeepSeek 最新定价', desc: 'DeepSeek 最新优惠信息已更新', tags: ['new'], validUntil: '长期有效', url: 'https://api-docs.deepseek.com/zh-cn/quick_start/pricing', promoType: 'discount' },
   { platformId: 'aliyun', title: '阿里云 GPU 活动', desc: '阿里云 最新优惠信息已更新', tags: ['new'], validUntil: '长期有效', url: 'https://www.aliyun.com/daily-act/ecs/activity_selection', promoType: 'discount' },
 ];
+\
+\
+/* ===== GPU 价格数据 ===== */\
+const gpuPrices = {\
+  aliyun: { icon: '☁️', name: '阿里云', prices: { 'H100':'¥42/h','A100-80G':'¥28/h','A100-40G':'¥18/h','V100':'¥10/h','T4':'¥5/h','L4':'¥6/h' } },\
+  tencent: { icon: '💙', name: '腾讯云', prices: { 'H100':'¥38/h','A100-80G':'¥26/h','A100-40G':'¥16/h','V100':'¥9/h','T4':'¥4.5/h','L4':'¥5.5/h' } },\
+  huawei: { icon: '🌊', name: '华为云', prices: { 'H100':'¥45/h','A100-80G':'¥30/h','A100-40G':'¥20/h','V100':'¥11/h','T4':'¥5.5/h','L4':'¥6.5/h' } },\
+  aws: { icon: '🟠', name: 'AWS', prices: { 'H100':'\.2/h','A100-80G':'\.2/h','A100-40G':'\.5/h','V100':'\.4/h','T4':'\.7/h','L4':'\.8/h' } },\
+  gcp: { icon: '🟢', name: 'GCP', prices: { 'H100':'\.8/h','A100-80G':'\.9/h','A100-40G':'\.2/h','V100':'\.2/h','T4':'\.6/h','L4':'\.7/h' } },\
+  azure: { icon: '🟦', name: 'Azure', prices: { 'H100':'\.0/h','A100-80G':'\.0/h','A100-40G':'\.3/h','V100':'\.3/h','T4':'\.65/h','L4':'\.75/h' } },\
+  lambdalabs: { icon: '🟣', name: 'Lambda', prices: { 'H100':'\.5/h','A100-80G':'\.8/h','A100-40G':'\.3/h','V100':'-','T4':'-','L4':'\.5/h' } },\
+  vastai: { icon: '🌐', name: 'Vast.ai', prices: { 'H100':'\.8/h','A100-80G':'\.2/h','A100-40G':'\.9/h','V100':'\.5/h','T4':'\.3/h','L4':'\.35/h' } },\
+  runpod: { icon: '🚀', name: 'RunPod', prices: { 'H100':'\.8/h','A100-80G':'\.9/h','A100-40G':'\.4/h','V100':'\.8/h','T4':'\.4/h','L4':'\.6/h' } },\
+};\
+\
+/* ===== API 价格数据 ===== */\
+const apiPrices = {\
+  openai: { icon: '⚪', name: 'OpenAI', prices: { 'GPT-4o':'\.5/\','GPT-4.1':'\/\','GPT-4.1-mini':'\.4/\.6' } },\
+  deepseek: { icon: '🔮', name: 'DeepSeek', prices: { 'V3':'¥0.5/¥2','R1':'¥4/¥16' } },\
+  anthropic: { icon: '🟣', name: 'Anthropic', prices: { 'Sonnet':'\/\','Haiku':'\.25/\.25' } },\
+  gemini: { icon: '🟦', name: 'Gemini', prices: { '2.5-Pro':'\.25/\','2.0-Flash':'免费' } },\
+  qwen: { icon: '🐰', name: '阿里通义', prices: { 'Qwen-Max':'¥20/¥60','Qwen-Turbo':'¥2/¥6' } },\
+  kimi: { icon: '🌙', name: '月之暗面', prices: { 'Latest':'¥8/¥24','Flash':'¥1/¥4' } },\
+  glm: { icon: '🔬', name: '智谱GLM', prices: { 'GLM-4':'¥15/¥30','GLM-4-Flash':'¥0.1/¥0.3' } },\
+  groq: { icon: '⚡', name: 'Groq', prices: { 'Llama-4':'免费','R1':'免费' } },\
+  siliconflow: { icon: '🔌', name: '硅基流动', prices: { 'DS-V4':'¥1/¥2','GLM-5.1':'¥2/¥6' } },\
+};
