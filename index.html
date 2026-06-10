@@ -82,18 +82,42 @@
     </div>
   </div>
 
-  <!-- ==================== 比价页 ==================== -->
+  <!-- ==================== 比价+组合测算页 ==================== -->
   <div id="page-compare" class="page">
     <div class="page-header">
       <button class="back-btn" onclick="goHome()">← 返回</button>
-      <h2 class="page-title">📊 GPU 比价</h2>
+      <h2 class="page-title">📊 比价·组合</h2>
       <button class="theme-btn" onclick="toggleTheme()">🌙</button>
     </div>
-    <div class="detail-scroll" id="compareScroll">
-      <div class="detail-section">
-        <h3 class="detail-section-title">主流 GPU 云实例价格对比</h3>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">按小时计费，单位：美元/小时（国际平台）或元/小时（国内平台）。价格可能变化，仅供参考。</p>
-        <div id="compareTable"></div>
+    <div style="display:flex;gap:4px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border)">
+      <button class="cp-tab active" onclick="switchCpTab('compare')">🔍 多平台比价</button>
+      <button class="cp-tab" onclick="switchCpTab('combine')">🧮 组合测算</button>
+    </div>
+    <!-- 比价内容 -->
+    <div id="cpCompare" class="detail-scroll">
+      <div style="padding:12px 16px">
+        <div style="display:flex;gap:6px;margin-bottom:12px">
+          <button class="cp-type-btn active" data-type="compute" onclick="switchCpType('compute')">🖥️ 算力平台</button>
+          <button class="cp-type-btn" data-type="llm" onclick="switchCpType('llm')">🧠 大模型平台</button>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:8px">选择 2-4 个平台对比</p>
+        <div id="cpPlatforms" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+        <div id="cpTable" style="overflow-x:auto"></div>
+      </div>
+    </div>
+    <!-- 组合测算内容 -->
+    <div id="cpCombine" class="detail-scroll" style="display:none">
+      <div style="padding:12px 16px">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">选一个算力平台 + 一个大模型平台，查看他们的优惠组合</p>
+        <div style="margin-bottom:12px">
+          <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">🖥️ 算力平台</label>
+          <select id="comboCompute" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px" onchange="renderCombo()"></select>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px">🧠 大模型平台</label>
+          <select id="comboLlm" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px" onchange="renderCombo()"></select>
+        </div>
+        <div id="comboResult"></div>
       </div>
     </div>
   </div>
