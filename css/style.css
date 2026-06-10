@@ -1,46 +1,55 @@
-/* ===== 算力优惠聚合 - 科技风 ===== */
+/* ===== 算力优惠聚合 - DeepSeek 风格 · 适配 11.png 配色 ===== */
 
 :root {
-  --bg: #050a1a;
-  --bg2: #0a1230;
-  --bg3: #0f1a3a;
-  --surface: rgba(10, 30, 60, 0.75);
-  --surface-hover: rgba(15, 45, 80, 0.9);
-  --text: #e0f0ff;
-  --text2: #7ab8e0;
-  --text3: #3a7aaa;
-  --accent: #00d4ff;
-  --accent2: #4df0ff;
-  --accent-dim: rgba(0, 212, 255, 0.15);
-  --green: #00ff88;
-  --green-bg: rgba(0, 255, 136, 0.12);
-  --orange: #ffb347;
-  --orange-bg: rgba(255, 179, 71, 0.12);
-  --pink: #ff6b9d;
-  --pink-bg: rgba(255, 107, 157, 0.12);
-  --blue: #4dabff;
-  --red: #ff4757;
-  --border: rgba(0, 212, 255, 0.12);
-  --border-glow: rgba(0, 212, 255, 0.25);
+  /* 背景 - 取自 11.png 深色区域 #15181c ~ #242733 */
+  --bg: #15181c;
+  --bg2: #1c1f24;
+  --bg3: #242833;
+  --surface: rgba(30, 35, 45, 0.85);
+  --surface-hover: rgba(40, 46, 58, 0.95);
+
+  /* 文字 - 浅蓝灰 */
+  --text: #e4eaf0;
+  --text2: #8899b0;
+  --text3: #5c6f8a;
+
+  /* 品牌色 - DeepSeek 蓝 + 图片中的 steel blue */
+  --accent: #3b82f6;
+  --accent2: #60a5fa;
+  --accent-dim: rgba(59, 130, 246, 0.15);
+
+  /* 状态色 */
+  --green: #22c55e;
+  --green-bg: rgba(34, 197, 94, 0.12);
+  --orange: #f59e0b;
+  --orange-bg: rgba(245, 158, 11, 0.12);
+  --pink: #ec4899;
+  --pink-bg: rgba(236, 72, 153, 0.12);
+  --purple: #a855f7;
+  --red: #ef4444;
+
+  /* 边框 - 取自图片 mid-tone #516174 */
+  --border: rgba(81, 97, 116, 0.2);
+  --border-glow: rgba(59, 130, 246, 0.3);
+
   --radius: 14px;
   --radius-sm: 8px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --nav-height: 60px;
-  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
 }
 
 /* 亮色 */
 body.light {
-  --bg: #eef4ff;
+  --bg: #f0f2f5;
   --bg2: #ffffff;
-  --bg3: #d6e4ff;
-  --surface: rgba(255,255,255,0.85);
-  --surface-hover: #e8f0ff;
-  --text: #0a1a3a;
-  --text2: #2a6a9a;
-  --text3: #6a9ac0;
-  --border: rgba(0, 100, 200, 0.12);
-  --border-glow: rgba(0, 100, 200, 0.2);
+  --bg3: #e4e8ef;
+  --surface: rgba(255,255,255,0.9);
+  --surface-hover: #f0f2f8;
+  --text: #1a1d24;
+  --text2: #5c6f8a;
+  --text3: #9aabb8;
+  --border: rgba(81,97,116,0.12);
+  --border-glow: rgba(59,130,246,0.15);
 }
 
 /* ===== 全局重置 ===== */
@@ -68,8 +77,8 @@ body::before{
 }
 body.light::before{
   background-image:
-    linear-gradient(rgba(0,100,200,0.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,100,200,0.04) 1px,transparent 1px);
+    linear-gradient(rgba(59,130,246,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(59,130,246,0.04) 1px,transparent 1px);
 }
 /* 顶部光晕 */
 body::after{
@@ -108,12 +117,18 @@ a{color:var(--accent);text-decoration:none}
   min-height:100dvh;
 }
 .home-gradient{
-  position:fixed;top:0;left:0;right:0;height:60vh;
+  position:fixed;top:0;left:0;right:0;height:100vh;
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59,130,246,0.12), transparent),
-    radial-gradient(ellipse 50% 40% at 80% 60%, rgba(0,210,160,0.06), transparent);
+    linear-gradient(rgba(21,24,28,0.6), rgba(21,24,28,0.85)),
+    url('/bg.jpg') center/cover no-repeat;
+  background-blend-mode:overlay;
+}
+.home-gradient::after{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(59,130,246,0.06), transparent 70%),
+    radial-gradient(ellipse 40% 35% at 70% 50%, rgba(96,165,250,0.04), transparent 60%);
   pointer-events:none;
-  z-index:0;
 }
 .home-inner{
   position:relative;z-index:1;
