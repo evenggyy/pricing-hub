@@ -361,6 +361,7 @@ function renderDetail(platformId) {
         title="${isFav ? '取消收藏' : '收藏此平台'}">
         ${isFav ? '⭐' : '☆'}
       </button>
+      <button onclick="sharePlatform('${platformId}')" style="background:none;border:none;font-size:18px;cursor:pointer;margin-left:4px;vertical-align:middle" title="分享">🔗</button>
     </div>
     <div class="platform-url">
       <a href="${p.url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent2)">${p.url}</a>
@@ -409,6 +410,26 @@ function applyTheme() {
 }
 
 // ===== 弹窗 =====
+function sharePlatform(platformId) {
+  const p = platforms.find(x => x.id === platformId);
+  if (!p) return;
+  const text = `[${p.icon}] ${p.name} - 查看最新优惠 https://evengan.oss-cn-hangzhou.aliyuncs.com`;
+  if (navigator.share) {
+    navigator.share({ title: p.name + ' 优惠', text: text, url: 'https://evengan.oss-cn-hangzhou.aliyuncs.com' }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('✅ 已复制分享链接')).catch(() => {});
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ 已复制分享链接');
+  }
+}
+
 function showAboutModal() {
   document.getElementById('aboutPlatformCount').textContent = platforms.length;
   document.getElementById('aboutDealCount').textContent = deals.length;
@@ -458,21 +479,150 @@ const priceData = [
   { gpu: 'RTX4090', aliyun: '-', tencent: '-', huawei: '-', aws: '-', gcp: '-', azure: '-', lambdalabs: '$0.7/时', vastai: '$0.35/时' },
 ];
 
+// ===== 多平台比价 =====
+let cpType = 'compute';
+let cpSelected = [];
+
 function showCompare() {
-  const table = document.getElementById('compareTable');
-  if (!table) return;
-  let html = '<table class="compare-table"><thead><tr><th>GPU</th><th>阿里云</th><th>腾讯云</th><th>华为云</th><th>AWS</th><th>GCP</th><th>Azure</th><th>Lambda</th><th>Vast</th></tr></thead><tbody>';
-  priceData.forEach(r => {
-    html += `<tr><td class="gpu-name">${r.gpu}</td>`;
-    [r.aliyun, r.tencent, r.huawei, r.aws, r.gcp, r.azure, r.lambdalabs, r.vastai].forEach(p => {
-      const cls = p === '-' ? 'price-na' : (p.includes('$') && parseFloat(p) < 1) || (p.includes('¥') && parseFloat(p) < 10) ? 'price-best' : '';
-      html += `<td class="${cls}">${p}</td>`;
+  cpType = 'compute';
+  cpSelected = [];
+  switchPage('page-compare');
+  navActive(-1);
+  renderCpPlatforms();
+  document.getElementById('cpCompare').style.display = '';
+  document.getElementById('cpCombine').style.display = 'none';
+}
+
+function switchCpTab(tab) {
+  document.querySelectorAll('.cp-tab').forEach(t => t.classList.toggle('active', t.textContent.includes(tab === 'compare' ? '比价' : '组合')));
+  document.getElementById('cpCompare').style.display = tab === 'compare' ? '' : 'none';
+  document.getElementById('cpCombine').style.display = tab === 'combine' ? '' : 'none';
+  if (tab === 'combine') renderCombo();
+  else renderCpPlatforms();
+}
+
+function switchCpType(type) {
+  cpType = type;
+  cpSelected = [];
+  document.querySelectorAll('.cp-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  renderCpPlatforms();
+}
+
+function renderCpPlatforms() {
+  const container = document.getElementById('cpPlatforms');
+  const data = cpType === 'compute' ? gpuPrices : apiPrices;
+  const keys = Object.keys(data);
+  // 默认选中前2个
+  if (cpSelected.length === 0) { cpSelected = [keys[0], keys[1] || keys[0]]; }
+  container.innerHTML = keys.map(id => {
+    const d = data[id];
+    const sel = cpSelected.includes(id);
+    return `<button class="cp-platform-btn ${sel ? 'active' : ''}" onclick="toggleCpPlatform('${id}')">
+      <span class="ck">${sel ? '✓' : ''}</span>
+      ${d.icon} ${d.name}
+    </button>`;
+  }).join('');
+  renderCpTable();
+}
+
+function toggleCpPlatform(id) {
+  const idx = cpSelected.indexOf(id);
+  if (idx > -1) { cpSelected.splice(idx, 1); }
+  else if (cpSelected.length < 4) { cpSelected.push(id); }
+  else { showToast('最多选 4 个平台'); return; }
+  renderCpPlatforms();
+}
+
+function renderCpTable() {
+  const container = document.getElementById('cpTable');
+  const data = cpType === 'compute' ? gpuPrices : apiPrices;
+  const selected = cpSelected.map(id => data[id]).filter(Boolean);
+
+  if (selected.length < 2) { container.innerHTML = '<p style="color:var(--text3);font-size:13px">请选择至少 2 个平台</p>'; return; }
+
+  // 收集所有 GPU 型号 / 模型名
+  const allKeys = new Set();
+  selected.forEach(p => Object.keys(p.prices).forEach(k => allKeys.add(k)));
+  const keys = Array.from(allKeys);
+
+  let html = `<table class="cp-compare-table"><thead><tr><th>${cpType === 'compute' ? 'GPU' : '模型'}</th>`;
+  selected.forEach(p => { html += `<th>${p.icon} ${p.name}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  keys.forEach(key => {
+    html += `<tr><td class="gpu-n">${key}</td>`;
+    const vals = selected.map(p => p.prices[key] || '-');
+    // 找最低价
+    const prices = vals.map(v => {
+      const m = v.match(/[\d.]+/);
+      return m ? parseFloat(m[0]) : Infinity;
+    });
+    const minVal = Math.min(...prices);
+    vals.forEach((v, i) => {
+      const isBest = prices[i] === minVal && prices[i] !== Infinity && v !== '-';
+      html += `<td class="${isBest ? 'best' : ''}">${v}</td>`;
     });
     html += '</tr>';
   });
   html += '</tbody></table>';
-  html += '<p style="font-size:11px;color:var(--text3);margin-top:8px">💡 绿色=较优价格 · 价格仅供参考，以各平台官网为准</p>';
-  table.innerHTML = html;
-  switchPage('page-compare');
-  navActive(-1);
+  html += '<p style="font-size:11px;color:var(--text3);margin-top:8px">💡 绿色=最低价 · 价格仅供参考</p>';
+  container.innerHTML = html;
+}
+
+// ===== 组合测算 =====
+function renderCombo() {
+  const selC = document.getElementById('comboCompute');
+  const selL = document.getElementById('comboLlm');
+  if (!selC || !selL) return;
+
+  // 填充下拉框
+  if (selC.options.length === 0) {
+    const computePlatforms = platforms.filter(p => p.category === 'compute');
+    computePlatforms.forEach(p => { selC.add(new Option(p.icon + ' ' + p.name, p.id)); });
+    const llmPlatforms = platforms.filter(p => p.category === 'llm');
+    llmPlatforms.forEach(p => { selL.add(new Option(p.icon + ' ' + p.name, p.id)); });
+  }
+
+  const cId = selC.value;
+  const lId = selL.value;
+  const result = document.getElementById('comboResult');
+
+  const cDeals = deals.filter(d => d.platformId === cId);
+  const lDeals = deals.filter(d => d.platformId === lId);
+
+  if (!cId || !lId) { result.innerHTML = '<p style="color:var(--text3);font-size:13px">请选择平台</p>'; return; }
+
+  const cP = platforms.find(p => p.id === cId);
+  const lP = platforms.find(p => p.id === lId);
+
+  let html = `<div style="display:flex;gap:8px;margin-bottom:12px">
+    <div style="flex:1;padding:10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);text-align:center">
+      <div style="font-size:24px">${cP ? cP.icon : ''}</div>
+      <div style="font-size:13px;font-weight:600;margin-top:4px">${cP ? cP.name : ''}</div>
+      <div style="font-size:11px;color:var(--text2)">${cDeals.length} 个优惠</div>
+    </div>
+    <div style="display:flex;align-items:center;font-size:20px;color:var(--text3)">＋</div>
+    <div style="flex:1;padding:10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);text-align:center">
+      <div style="font-size:24px">${lP ? lP.icon : ''}</div>
+      <div style="font-size:13px;font-weight:600;margin-top:4px">${lP ? lP.name : ''}</div>
+      <div style="font-size:11px;color:var(--text2)">${lDeals.length} 个优惠</div>
+    </div>
+  </div>`;
+
+  if (cDeals.length === 0 && lDeals.length === 0) {
+    html += '<p style="color:var(--text3);font-size:13px;text-align:center">暂无优惠活动</p>';
+  } else {
+    html += '<h4 style="font-size:14px;font-weight:600;margin-bottom:8px">🎯 可用优惠</h4>';
+    [...cDeals, ...lDeals].forEach(d => {
+      const tagMap = { free: '免费', time: '限时', new: '最新', hot: '热门' };
+      const tags = d.tags.map(t => `<span class="tag ${t}">${tagMap[t] || t}</span>`).join('');
+      html += `<div class="combo-card">
+        <h4>${d.title}</h4>
+        <p>${d.desc}</p>
+        <div>${tags}</div>
+        <a href="${d.url}" target="_blank" class="link" style="font-size:11px">查看详情 →</a>
+      </div>`;
+    });
+  }
+  result.innerHTML = html;
 }
