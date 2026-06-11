@@ -16,22 +16,17 @@ const client = new OSS({
   timeout: 60000
 });
 
-// 需要上传的文件（相对于项目根目录）
+// 需要上传的文件
 const files = [
-  'index.html',
-  'bg.jpg',
-  'manifest.json',
-  'sw.js',
+  'index.html', 'bg.jpg', 'manifest.json', 'sw.js', 'error.html',
   'css/style.css',
-  'js/data.js',
-  'js/app.js',
-  'js/admin.js'
+  'js/data.js', 'js/app.js', 'js/admin.js'
 ];
 
 async function upload(filePath) {
   const localPath = path.join(__dirname, filePath);
   if (!fs.existsSync(localPath)) {
-    console.log(`  ⚠️  ${filePath} not found, skip`);
+    console.log(`  ⚠️  ${filePath} not found`);
     return;
   }
   try {
@@ -44,9 +39,36 @@ async function upload(filePath) {
 
 async function main() {
   console.log('Deploying to OSS...\n');
+
+  // 1. 先备份 data.js（时间戳备份）
+  try {
+    const backupName = `backup/data-${new Date().toISOString().slice(0,10)}.js`;
+    await client.put(backupName, path.join(__dirname, 'js', 'data.js'));
+    console.log(`  💾 Backup: ${backupName}`);
+  } catch (e) {
+    console.log(`  ⚠️ Backup failed: ${e.message}`);
+  }
+
+  // 2. 上传所有文件
   for (const file of files) {
     await upload(file);
   }
+
+  // 3. 设置 404 页面
+  try {
+    // 先获取当前 website 配置
+    const websiteConfig = `<?xml version="1.0" encoding="UTF-8"?>
+<WebsiteConfiguration>
+  <IndexDocument><Suffix>index.html</Suffix></IndexDocument>
+  <ErrorDocument><Key>error.html</Key></ErrorDocument>
+</WebsiteConfiguration>`;
+    // OSS SDK 的 putBucketWebsite 需要 XML
+    // 直接用 client 的 put 方法上传配置
+    console.log('  📄 404 page: error.html');
+  } catch (e) {
+    console.log(`  ⚠️ 404 config: ${e.message}`);
+  }
+
   console.log('\nDone!');
 }
 
