@@ -451,12 +451,27 @@ function showSubmitDeal() {
 function closeSubmitDeal() {
   document.getElementById('submitModal').style.display = 'none';
 }
+// 过滤恶意内容
+function sanitize(str) {
+  return str.replace(/<[^>]*>/g, '')    // 去掉HTML标签
+            .replace(/[<>"'`]/g, '')     // 去掉特殊字符
+            .replace(/javascript:/gi, '') // 去掉 js 协议
+            .replace(/on\w+=/gi, '')     // 去掉事件处理器
+            .trim();
+}
+
 function saveSubmitDeal() {
   const pid = document.getElementById('submitPlatform').value;
-  const title = document.getElementById('submitTitle').value.trim();
-  const desc = document.getElementById('submitDesc').value.trim();
+  const title = sanitize(document.getElementById('submitTitle').value);
+  const desc = sanitize(document.getElementById('submitDesc').value);
   const url = document.getElementById('submitUrl').value.trim();
+  // URL 只允许 http/https
+  if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+    showToast('链接格式不正确');
+    return;
+  }
   if (!pid || !title) { showToast('请填写平台和标题'); return; }
+  if (title.length > 100 || desc.length > 500) { showToast('内容过长'); return; }
   // 存到 localStorage
   const pending = JSON.parse(localStorage.getItem('pending-deals') || '[]');
   pending.push({ platformId: pid, title, desc, url, time: new Date().toISOString() });
