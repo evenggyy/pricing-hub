@@ -83,6 +83,7 @@ function renderAdmin() {
     </div>
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchAdminTab(this,'deals')">🎯 优惠管理</button>
+      <button class="admin-tab" onclick="switchAdminTab(this,'pending')">📩 待审核</button>
       <button class="admin-tab" onclick="switchAdminTab(this,'export')">📤 导出数据</button>
     </div>
     <div class="admin-scroll" id="adminContent"></div>
@@ -94,7 +95,62 @@ function switchAdminTab(el, tab) {
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   if (tab === 'deals') renderDealsTab();
+  else if (tab === 'pending') renderPendingTab();
   else renderExportTab();
+}
+
+// ===== 待审核 =====
+function renderPendingTab() {
+  const container = document.getElementById('adminContent');
+  const pending = JSON.parse(localStorage.getItem('pending-deals') || '[]');
+
+  if (pending.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)"><div style="font-size:40px;margin-bottom:12px">📭</div><p>暂无待审核的优惠</p></div>';
+    return;
+  }
+
+  let html = `<div class="admin-info">📩 共 ${pending.length} 条待审核</div>`;
+  pending.forEach((d, i) => {
+    const p = platforms.find(x => x.id === d.platformId);
+    html += `<div class="admin-card" style="border-color:var(--orange)">
+      <h4>${d.title}</h4>
+      <p>${d.desc}</p>
+      <p style="font-size:10px;color:var(--text3)">${p ? p.icon+' '+p.name : d.platformId} · ${new Date(d.time).toLocaleString()}</p>
+      <div class="admin-card-actions">
+        <button class="admin-btn-edit" onclick="approveDeal(${i})">✅ 采纳</button>
+        <button class="admin-btn-del" onclick="rejectDeal(${i})">🗑️ 拒绝</button>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function approveDeal(idx) {
+  const pending = JSON.parse(localStorage.getItem('pending-deals') || '[]');
+  const d = pending[idx];
+  if (!d) return;
+  // 添加到 deals
+  deals.push({
+    platformId: d.platformId,
+    title: d.title,
+    desc: d.desc,
+    tags: ['new'],
+    validUntil: '长期有效',
+    url: d.url,
+    promoType: 'free'
+  });
+  pending.splice(idx, 1);
+  localStorage.setItem('pending-deals', JSON.stringify(pending));
+  renderPendingTab();
+  showToast('✅ 已采纳，记得导出部署');
+}
+
+function rejectDeal(idx) {
+  const pending = JSON.parse(localStorage.getItem('pending-deals') || '[]');
+  pending.splice(idx, 1);
+  localStorage.setItem('pending-deals', JSON.stringify(pending));
+  renderPendingTab();
+  showToast('已拒绝');
 }
 
 function renderDealsTab() {
