@@ -364,7 +364,7 @@ function renderDetail(platformId) {
       <button onclick="sharePlatform('${platformId}')" style="background:none;border:none;font-size:18px;cursor:pointer;margin-left:4px;vertical-align:middle" title="分享">🔗</button>
     </div>
     <div class="platform-url">
-      <a href="${p.url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent2)">${p.url}</a>
+      <a href="${trackUrl(p.url, p.id)}" target="_blank" rel="noopener noreferrer" data-track="true" data-platform="${p.id}" style="color:var(--accent2)">${p.url}</a>
     </div>
     <div class="platform-stats">
       <div class="stat"><strong>${platformDeals.length}</strong>优惠活动</div>
@@ -386,7 +386,7 @@ function renderDetail(platformId) {
         <div class="deal-tags">${d.tags.map(t => `<span class="deal-tag ${t}">${tagMap[t] || t}</span>`).join('')}</div>
         <div class="deal-footer">
           <span class="deal-valid">📅 ${d.validUntil}</span>
-          ${expired ? '' : `<a href="${d.url}" target="_blank" rel="noopener noreferrer" class="deal-link">立即查看 →</a>`}
+          ${expired ? '' : `<a href="${trackUrl(d.url, d.platformId, d.title)}" target="_blank" rel="noopener noreferrer" class="deal-link" data-track="true" data-platform="${d.platformId}">立即查看 →</a>`}
         </div>
       </div>`;
     }).join('');
@@ -437,6 +437,21 @@ function showAboutModal() {
 }
 function closeModals() {
   document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+}
+
+// ===== 推广链接 + 点击统计 =====
+function trackUrl(url, platformId, dealTitle) {
+  const sep = url.includes('?') ? '&' : '?';
+  const tracked = url + sep + 'ref=aifare';
+  // 记录点击到 localStorage
+  try {
+    const clicks = JSON.parse(localStorage.getItem('click-log') || '[]');
+    clicks.push({ platformId, dealTitle, url, time: new Date().toISOString() });
+    // 只保留最近 500 条
+    if (clicks.length > 500) clicks.splice(0, clicks.length - 500);
+    localStorage.setItem('click-log', JSON.stringify(clicks));
+  } catch {}
+  return tracked;
 }
 
 // ===== 提交优惠 =====
@@ -635,7 +650,7 @@ function renderCombo() {
         <h4>${d.title}</h4>
         <p>${d.desc}</p>
         <div>${tags}</div>
-        <a href="${d.url}" target="_blank" class="link" style="font-size:11px">查看详情 →</a>
+        <a href="${trackUrl(d.url, d.platformId)}" target="_blank" class="link" data-track="true" data-platform="${d.platformId}" style="font-size:11px">查看详情 →</a>
       </div>`;
     });
   }
