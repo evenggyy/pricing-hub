@@ -84,6 +84,7 @@ function renderAdmin() {
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchAdminTab(this,'deals')">🎯 优惠管理</button>
       <button class="admin-tab" onclick="switchAdminTab(this,'pending')">📩 待审核</button>
+      <button class="admin-tab" onclick="switchAdminTab(this,'stats')">📊 点击统计</button>
       <button class="admin-tab" onclick="switchAdminTab(this,'export')">📤 导出数据</button>
     </div>
     <div class="admin-scroll" id="adminContent"></div>
@@ -96,7 +97,62 @@ function switchAdminTab(el, tab) {
   el.classList.add('active');
   if (tab === 'deals') renderDealsTab();
   else if (tab === 'pending') renderPendingTab();
+  else if (tab === 'stats') renderStatsTab();
   else renderExportTab();
+}
+
+// ===== 点击统计 =====
+function renderStatsTab() {
+  const container = document.getElementById('adminContent');
+  const clicks = JSON.parse(localStorage.getItem('click-log') || '[]');
+
+  if (clicks.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)"><div style="font-size:40px;margin-bottom:12px">📊</div><p>暂无点击数据</p><p style="font-size:12px;margin-top:8px">点击平台或优惠链接后，数据会出现在这里</p></div>';
+    return;
+  }
+
+  // 按平台统计
+  const stats = {};
+  clicks.forEach(c => {
+    const key = c.platformId || 'unknown';
+    if (!stats[key]) stats[key] = { count: 0, deals: {}, lastClick: '' };
+    stats[key].count++;
+    stats[key].lastClick = c.time > stats[key].lastClick ? c.time : stats[key].lastClick;
+    if (c.dealTitle) {
+      stats[key].deals[c.dealTitle] = (stats[key].deals[c.dealTitle] || 0) + 1;
+    }
+  });
+
+  const total = clicks.length;
+  let html = `<div class="admin-info">📊 共 ${total} 次点击（仅记录本浏览器）</div>`;
+
+  // 汇总卡片
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
+  Object.keys(stats).sort((a, b) => stats[b].count - stats[a].count).forEach(key => {
+    const p = platforms.find(x => x.id === key);
+    const name = p ? p.icon + ' ' + p.name : key;
+    const s = stats[key];
+    html += `<div style="flex:1;min-width:100px;padding:10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);text-align:center">
+      <div style="font-size:20px;font-weight:700;color:var(--accent)">${s.count}</div>
+      <div style="font-size:11px;color:var(--text2)">${name}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // 最近点击
+  html += '<h4 style="font-size:13px;font-weight:600;margin-bottom:8px">最近点击</h4>';
+  [...clicks].reverse().slice(0, 20).forEach(c => {
+    const p = platforms.find(x => x.id === c.platformId);
+    const name = p ? p.icon + ' ' + p.name : c.platformId;
+    html += `<div class="admin-card" style="padding:8px 12px">
+      <div style="font-size:12px;display:flex;justify-content:space-between">
+        <span>${name} · ${c.dealTitle || '平台主页'}</span>
+        <span style="color:var(--text3);font-size:10px">${new Date(c.time).toLocaleString()}</span>
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
 }
 
 // ===== 待审核 =====
